@@ -21,12 +21,11 @@ RUN apt-get update && apt-get install -y \
 RUN useradd -m -s /bin/bash distcc
 
 # Configure distcc
+ENV DISTCC_JOBS=4
 ENV DISTCC_DIR=/var/lib/distcc
 RUN mkdir -p ${DISTCC_DIR} && chown -R distcc:distcc ${DISTCC_DIR}
 
 # Expose default distcc port
 EXPOSE 3632
 
-# Start distccd in pump mode
-USER distcc
-ENTRYPOINT ["distccd", "--daemon", "--allow", "0.0.0.0", "--jobs", "4"]
+ENTRYPOINT ["/bin/sh", "-c", "distccd --daemon --allow 0.0.0.0 --jobs ${DISTCC_JOBS:-4}"]
