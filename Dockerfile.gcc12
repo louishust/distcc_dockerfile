@@ -1,0 +1,32 @@
+FROM ubuntu:22.04
+
+LABEL maintainer="distcc-gcc-12"
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install GCC 12, G++ 12, and distcc
+RUN apt-get update && apt-get install -y \
+    gcc-12 \
+    g++-12 \
+    distcc \
+    distcc-pump \
+    && update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 120 \
+    && update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-12 120 \
+    && update-alternatives --set gcc /usr/bin/gcc-12 \
+    && update-alternatives --set g++ /usr/bin/g++-12 \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create distcc user
+RUN useradd -m -s /bin/bash distcc
+
+# Configure distcc
+ENV DISTCC_DIR=/var/lib/distcc
+RUN mkdir -p ${DISTCC_DIR} && chown -R distcc:distcc ${DISTCC_DIR}
+
+# Expose default distcc port
+EXPOSE 3632
+
+# Start distccd in pump mode
+USER distcc
+ENTRYPOINT ["distccd", "--daemon", "--allow", "0.0.0.0", "--jobs", "4"]
