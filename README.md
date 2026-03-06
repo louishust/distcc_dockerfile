@@ -115,6 +115,81 @@ services:
     restart: unless-stopped
 ```
 
+## 镜像打包与迁移
+
+在无法访问 Docker Hub 或内网环境中，可以将构建好的镜像打包成 tar 文件进行迁移。
+
+### 导出镜像
+
+```bash
+# 导出镜像为 tar 文件
+docker save -o distcc-gcc10.tar distcc-gcc10
+docker save -o distcc-gcc11.tar distcc-gcc11
+docker save -o distcc-gcc12.tar distcc-gcc12
+
+# 也可以将多个镜像打包成一个文件
+docker save -o distcc-all.tar distcc-gcc10 distcc-gcc11 distcc-gcc12
+```
+
+### 导入镜像
+
+```bash
+# 从 tar 文件加载镜像
+docker load -i distcc-gcc12.tar
+
+# 或者从标准输入导入
+docker load < distcc-gcc12.tar
+```
+
+### 传输镜像
+
+#### 方法一：使用 SCP
+
+```bash
+# 传输到其他机器
+scp distcc-gcc12.tar user@192.168.1.100:~/
+```
+
+#### 方法二：使用 rsync（推荐大文件）
+
+```bash
+# 带进度显示传输
+rsync -avP distcc-gcc12.tar user@192.168.1.100:~/
+```
+
+#### 方法三：构建私有镜像仓库
+
+```bash
+# 启动本地私有仓库
+docker run -d -p 5000:5000 --restart=always --name registry registry:2
+
+# 标记镜像
+docker tag distcc-gcc12 localhost:5000/distcc-gcc12
+
+# 推送镜像
+docker push localhost:5000/distcc-gcc12
+
+# 在其他机器上拉取
+docker pull 192.168.1.100:5000/distcc-gcc12
+```
+
+### 完整迁移流程示例
+
+```bash
+# 1. 在有网络的机器上构建并导出
+git clone https://github.com/louishust/distcc_dockerfile.git
+cd distcc_dockerfile
+docker build -f Dockerfile.gcc12 -t distcc-gcc12 .
+docker save -o distcc-gcc12.tar distcc-gcc12
+
+# 2. 传输到目标机器
+rsync -avP distcc-gcc12.tar user@192.168.1.100:~/
+
+# 3. 在目标机器上导入并运行
+docker load -i distcc-gcc12.tar
+docker run -d -p 3632:3632 --name distcc-server distcc-gcc12
+```
+
 ## 注意事项
 
 1. **网络要求**：确保客户端与服务器之间的 3632 端口互通
