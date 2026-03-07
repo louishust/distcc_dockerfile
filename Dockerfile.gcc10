@@ -25,7 +25,12 @@ RUN useradd -m -s /bin/bash distcc
 # Configure distcc
 ENV DISTCC_JOBS=4
 ENV DISTCC_DIR=/var/lib/distcc
-RUN mkdir -p ${DISTCC_DIR} && chown -R distcc:distcc ${DISTCC_DIR}
+RUN mkdir -p /usr/lib/distcc && \
+    ln -sf /usr/bin/g++-10 /usr/lib/distcc/g++ && \
+    ln -sf /usr/bin/gcc-10 /usr/lib/distcc/gcc && \
+    ln -sf /usr/bin/g++-10 /usr/lib/distcc/c++ && \
+    ln -sf /usr/bin/gcc-10 /usr/lib/distcc/cc && \
+    mkdir -p ${DISTCC_DIR} && chown -R distcc:distcc ${DISTCC_DIR}
 
 # Expose default distcc port
 EXPOSE 3632
