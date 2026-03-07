@@ -35,4 +35,4 @@ RUN mkdir -p /usr/lib/distcc && \
 # Expose default distcc port
 EXPOSE 3632
 
-ENTRYPOINT ["/bin/sh", "-c", "distccd --daemon --no-detach --log-stderr --allow 0.0.0.0/0 --jobs ${DISTCC_JOBS:-4}"]
+ENTRYPOINT [ "/bin/bash" ]
