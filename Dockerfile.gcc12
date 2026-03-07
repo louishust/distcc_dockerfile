@@ -37,4 +37,4 @@ RUN mkdir -p /usr/lib/distcc && \
 # Expose default distcc port
 EXPOSE 3632
 
-ENTRYPOINT [ "/bin/bash" ]
+ENTRYPOINT ["/bin/sh", "-c", "sleep infinity"]
